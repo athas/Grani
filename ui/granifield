@@ -1,0 +1,99 @@
+#!/bin/sh
+
+# A wrapper around `sinmenu` meant to be called by `granibrowse`.  It
+# provides Google Suggest support through an ugly embedded Python
+# script.
+
+trap 'kill $(jobs -p) 2>/dev/null' EXIT # Kill all children when we quit.
+
+granicache=${XDG_CACHE_HOME:-~/.cache}/grani
+history=$granicache/history
+visits=$granicache/visits
+
+googlesuggest() {
+    python - "$@" <<EOF
+import sys, string
+import urllib
+
+URI = "http://www.google.com/complete/search?hl=en&js=true&qu="
+
+def suggest(term):
+    # Pull the results as Javascript, then munge them a bit and
+    # evaluate them as Python, yielding a dictionary.
+    text = urllib.urlopen(URI + urllib.quote(term)).read() \
+           .replace("window.google.ac.h","")
+    for res in ([x[0] for x in eval(text)[1]]):
+        print res[0].decode('latin-1').encode('utf-8')
+
+suggest(string.join(sys.argv[1:], ' '))
+EOF
+}
+
+unurl() {
+    awk '/g [a-z]+\.[a-z]+/{print substr($0,3); next}{print}'
+}
+
+gui() {
+    code=$(cat <<EOF
+input->changed(from, to) { print to; }
+function quit() { print; exit }
+EOF
+    )
+    dir=$(mktemp -p /tmp -d dir-XXXXXX) || exit 1
+    fifo=$dir/fifo
+    mkfifo "$fifo" || { rmdir "$dir"; exit 1; }
+    (cat; tac $history 2> /dev/null; cat $fifo) | awk '!written[$0] { written[$0] = 1; print $0; fflush() }'\
+    | sinmenu -i -e "$code" -l 10 -b -p "uri [dgtwuy*]:" "$@" \
+        | while read line; do
+        echo "$line" 1>&3
+        case "$line" in
+            "h "*) ;;
+            "i "*) googlesuggest "${line#i }" | sed 's/^/i /' & ;;
+            *) googlesuggest "${line#g }" | sed 's/^/g /' | unurl &
+        esac
+    done 3>&1 1>$fifo | tail -n 1 | sed '/^$/d'
+    rm $fifo
+    rmdir $dir
+}
+
+sel=$(gui "$@")
+
+[ -z "$sel" ] && exit 1
+
+opt=$(echo $sel | cut -d ' ' -f 1)
+arg=$(echo $sel | cut -d ' ' -f 2-)
+save=0
+
+case "$opt" in
+    "g")
+        uri="http://www.google.com/search?q=$arg"
+        save=1
+        ;;
+    "i")
+        uri="http://www.google.com/images?q=$arg"
+        save=1
+        ;;
+    "t")
+        uri="http://tinyurl.com/create.php?url=`s_get_prop _GRANI_URI`"
+        ;;
+    "w")
+        uri="http://wikipedia.org/wiki/$arg"
+        save=1
+        ;;
+    "h")
+        uri="http://haskell.org/hoogle/?q=$arg"
+        save=1
+        ;;
+    "y")
+        uri="http://www.youtube.com/results?search_query=$arg&aq=f"
+        save=1
+        ;;
+    *)
+        uri="$sel"
+        save=1
+        ;;
+esac
+
+[ "$save" -eq 1 ] && ((rm "$history" && awk '$0!=SEL' "SEL=$sel" > "$history") < "$history"; echo "$sel" >> "$history")
+
+echo "$uri"

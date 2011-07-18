@@ -1,0 +1,88 @@
+#!/bin/sh
+#
+# Simplistic session management for `grani`.
+#
+# Only URLs are remembered, no cookie, HTTP session, or browsing
+# history is stored.  The script is supposed to be called
+# automatically by `grani` to update URL data, and by user commands to
+# resume them.  File locking via `flock` is used to ensure atomicity
+# of modifications to the sessions file.
+#
+# An URL is considered an "orphan" if its listed PID no longer
+# refers to a live process.
+#
+# The first argument to `granisession` indicates the action to be
+# taken, with the following actions being supported:
+#
+# * `add` _pid_ _url_ _title_: store _url_, with the given _title_,
+# as being browsed by the process `_pid_`.
+#
+# * `remove` _pid_ _url_: remove any _url_ being browsed by _pid_.
+#
+# * `purge` _url_: remove any _url_ being browsed by any process.
+#
+# * `restore`: start `grani` for all orphan URLs.
+#
+# * `resume`: use `sinmenu` to select an orphan URL, which will be
+#   opened in `grani`.
+
+set -e # Die on error
+
+font='-*-terminus-medium-*-*-*-*-*-*-*-*-*-*-*'
+normbgcolor='#181818'
+normfgcolor='#e9e9e9'
+selbgcolor='#dd6003'
+selfgcolor='#e9e9e9'
+menu="sinmenu --nb $normbgcolor --nf $normfgcolor \
+      --sb $selbgcolor --sf $selfgcolor -l 10"
+
+orphans () {
+    awk '{ if (system("test -d /proc/"$1)) { print(substr($0,index($0,$2))) }}' $sessions
+}
+
+rmtitle () {
+    awk '{print substr($0,1,index($0," - "))}'
+}
+
+visitssize=500000
+
+granicache=${XDG_CACHE_HOME:-~/.cache}/grani
+sessions=$granicache/sessions
+visits=$granicache/visits
+
+if touch $sessions; then
+   # We translate command foo to foo-locked surrounded by locking of
+   # $granicache.
+    case "$1" in
+        add-locked)
+            (rm "$visits" && tail -n $visitssize | awk 'index($0, URL" - ")!=1' "URL=$3" > "$visits") < "$visits"
+            $0 remove-locked "$2"
+            echo "$3 - $4" >> "$visits"
+            echo "$2 $3 - $4" >> "$sessions"
+            ;;
+        remove-locked)
+            (rm "$sessions" && awk '$1!=PID' "PID=$2" > "$sessions") < "$sessions"
+            ;;
+        purge-locked)
+            (rm "$sessions" && awk '$2!=URL' "URL=$2" > "$sessions") < "$sessions"
+            ;;
+        restore-locked)
+            orphans | rmtitle | ( while read url; do grani "$url" & done )
+            rm $sessions
+            ;;
+        resume-locked)
+            res=$(orphans|$menu|rmtitle)
+            [ -n "$res" ] && $0 purge-locked $res && grani $res &
+            ;;
+        *-locked) # Don't deadlock on unknown commands...
+            exit 1
+            ;;
+        *) # Wrap a command in file locking and rerun the script.
+            cmd=$1-locked
+            shift
+            flock -o $granicache $0 "$cmd" "$@"
+    esac
+else
+    echo 'Cannot write to '$granicache 1>&2
+    exit 1
+fi

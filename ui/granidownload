@@ -1,0 +1,8 @@
+#!/bin/sh
+dir=$(filesel --filename $(basename $1))
+cookiefile=${XDG_CACHE_HOME:-~/.cache}/grani/cookies.txt
+terminal=urxvt
+if [ -n "$dir" ]; then
+    cd $(dirname $dir)
+    $terminal -e /bin/sh -c "wget --load-cookies $cookiefile '$1' -O $(basename "$dir"); sleep 3600"
+fi

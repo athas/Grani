@@ -1,0 +1,36 @@
+Grani - hackable Webkit-based browser
+==================================
+
+Grani is yet another relatively simple browser based on Webkit with an
+emphasis on using external tools for most everything (such as the UI).
+
+This program started as a fork of the [Surf][surf] web browser by the
+Suckless project.
+
+
+Requirements
+------------
+
+In order to build Grani you need GTK+ and Webkit/GTK+ header files.  To
+use it, you need [Sindre][sindre].
+
+
+Installation
+------------
+
+Edit config.mk to match your local setup (Grani is installed into the
+/usr/local namespace by default).
+
+Afterwards enter the following command to build and install Grani (if
+necessary as root):
+
+    make clean install
+
+
+Running Grani
+------------
+run
+	Grani [URL]
+
+[surf]: http://surf.suckless.org/
+[sindre]: http://sigkill.dk/programs/sindre
