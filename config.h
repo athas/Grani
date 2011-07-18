@@ -8,9 +8,9 @@ static time_t sessiontime   = 3600*24*30;
 	"prop=\"`xprop -id $2 $0 | cut -d '\"' -f 2 | dmenu`\" &&" \
 	"xprop -id $2 -f $1 8s -set $1 \"$prop\"", \
 	p, q, winid, NULL } }
-#define BROWSE(p) { .v = (char *[]){ "/bin/sh", "-c", "granibrowse $1 $0", p, winid, NULL } }
+#define BROWSE(p) { .v = (char *[]){ "/bin/sh", "-c", "granibrowse $1 $0 < /dev/null", p, winid, NULL } }
 #define STRING(f) { .v = (char*[]){ f } }
-#define DOWNLOAD(d) { .v = (char *[]){ "/bin/sh", "-c", "granidownload $0", d, NULL } }
+#define DOWNLOAD(d) { .v = (char *[]){ "/bin/sh", "-c", "granidownload $0 < /dev/null", d, NULL } }
 
 #define CTRL GDK_CONTROL_MASK
 #define SHIFT GDK_SHIFT_MASK
