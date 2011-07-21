@@ -172,7 +172,7 @@ void
 sessionupd(const char* cmd, const char* uri, const char* title) {
     char* pid = malloc(20);
     sprintf(pid, "%d", getpid());
-    Arg arg = { .v = (const char *[]){ "granisession", cmd, pid, uri, title, NULL } };
+    Arg arg = { .v = (const char *[]){ "grani-session", cmd, pid, uri, title, NULL } };
     spawn(NULL, &arg);
     free(pid);
 }

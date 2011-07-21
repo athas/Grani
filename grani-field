@@ -1,8 +1,8 @@
 #!/bin/sh
 
 # A wrapper around `sinmenu` meant to be called by `granibrowse`.  It
-# provides Google Suggest support through an ugly embedded Python
-# script.
+# provides Google Suggest (via DuckDuckGo) support through an ugly
+# embedded Python script.
 
 trap 'kill $(jobs -p) 2>/dev/null' EXIT # Kill all children when we quit.
 
@@ -15,14 +15,14 @@ googlesuggest() {
 import sys, string
 import urllib
 
-URI = "http://www.google.com/complete/search?hl=en&js=true&qu="
+URI = "http://ddgg.nfriedly.com/complete/search?q="
 
 def suggest(term):
     # Pull the results as Javascript, then munge them a bit and
     # evaluate them as Python, yielding a dictionary.
     text = urllib.urlopen(URI + urllib.quote(term)).read() \
            .replace("window.google.ac.h","")
-    for res in ([x[0] for x in eval(text)[1]]):
+    for res in ([x for x in eval(text)[1]]):
         print res[0].decode('latin-1').encode('utf-8')
 
 suggest(string.join(sys.argv[1:], ' '))
@@ -66,15 +66,12 @@ save=0
 
 case "$opt" in
     "g")
-        uri="http://www.google.com/search?q=$arg"
+        uri="http://duckduckgo.com/?q=$arg"
         save=1
         ;;
     "i")
         uri="http://www.google.com/images?q=$arg"
         save=1
-        ;;
-    "t")
-        uri="http://tinyurl.com/create.php?url=`s_get_prop _GRANI_URI`"
         ;;
     "w")
         uri="http://wikipedia.org/wiki/$arg"

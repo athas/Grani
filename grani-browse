@@ -14,7 +14,7 @@
 #
 # Usage: `granibrowse` _xid_ _action_
 #
-# _action_ must be one of `bookmark`, `go`, `info` or `history`
+# _action_ must be one of `bookmark`, `del`, `info` or `history`.
 #
 # To install, add the following to your `config.h`:
 #
@@ -37,9 +37,7 @@ visits=$granicache/visits
 xid=$1
 p=$2
 
-menu="granifield -l 10 -b"
-
-rawmenu="sinmenu -l 10 -b"
+menu="sinmenu -l 10 -b"
 
 s_get_prop() { # xprop
     xprop -id $xid $1 | cut -d '"' -f 2
@@ -55,26 +53,20 @@ s_write_f() { # file value
 
 case "$p" in
     info)
-        xprop -id $xid | sed 's/\t/    /g' | $rawmenu -l 20
+        xprop -id $xid | sed 's/\t/    /g' | $menu -l 20
         ;;
     bookmark)
         uri=$(s_get_prop _GRANI_URI)
         s_write_f $history "$uri"
         ;;
     del)
-        sel=$(tac "$history" | $rawmenu -p 'delete:')
+        sel=$(tac "$history" | $menu -p 'delete:')
         [ "$sel" ] || exit 1
         (rm "$history" && awk '$0!=SEL' "SEL=$sel" > "$history") < "$history"
         ;;
     history)
-        sel=$(tac $visits | $rawmenu -p 'uri from history:' | awk -F' - ' '{print $1}')
+        sel=$(tac $visits | $menu -p 'uri from history:' | awk -F' - ' '{print $1}')
         s_set_prop _GRANI_GO "$sel"
-        ;;
-    go)
-        uri=$($menu)
-        [ "$uri" ] || exit 1
-
-        s_set_prop _GRANI_GO "$uri"
         ;;
     *)
         echo Unknown xprop
