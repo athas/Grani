@@ -44,6 +44,7 @@ static Key keys[] = {
     { SHIFT,                GDK_i,      spawn,      BROWSE("info") },
     { CTRL|SHIFT,           GDK_g,      spawn,      BROWSE("go_raw") },
     { CTRL,                 GDK_f,      eval,       STRING("hintMode()") },
+    { CTRL|SHIFT,           GDK_f,      eval,       STRING("hintMode(true)") },
     { CTRL,                 GDK_c,      eval,       STRING("removeHints()") },
     { CTRL,                 GDK_z,      suspend,    { 0 } },
 };
