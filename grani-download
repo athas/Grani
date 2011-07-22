@@ -1,5 +1,5 @@
 #!/bin/sh
-dir=$(filesel --filename $(basename $1))
+dir=$(filesel --filename ${$2:-$(basename $1)})
 cookiefile=${XDG_CACHE_HOME:-~/.cache}/grani/cookies.txt
 terminal=urxvt
 if [ -n "$dir" ]; then

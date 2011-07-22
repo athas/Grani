@@ -12,7 +12,7 @@ static time_t sessiontime   = 3600*24*30;
 #define SETPROP(p, q) SETPROP_PROG(p,q,"sinmenu")
 #define BROWSE(p) { .v = (char *[]){ "/bin/sh", "-c", "grani-browse $1 $0 < /dev/null", p, winid, NULL } }
 #define STRING(f) { .v = (char*[]){ f } }
-#define DOWNLOAD(d) { .v = (char *[]){ "/bin/sh", "-c", "grani-download $0 < /dev/null", d, NULL } }
+#define DOWNLOAD(d, f) { .v = (char *[]){ "/bin/sh", "-c", "grani-download $0 $1 < /dev/null", d, NULL } }
 
 #define CTRL GDK_CONTROL_MASK
 #define SHIFT GDK_SHIFT_MASK

@@ -349,7 +349,8 @@ initdownload(WebKitWebView *view, WebKitDownload *o, Client *c) {
     Arg arg;
 
     updatewinid(c);
-    arg = (Arg)DOWNLOAD((char *)webkit_download_get_uri(o));
+    arg = (Arg)DOWNLOAD((char *)webkit_download_get_uri(o),
+                        (char *)webkit_download_get_suggested_filename(o));
     spawn(c, &arg);
     return FALSE;
 }
