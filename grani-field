@@ -42,8 +42,9 @@ EOF
     dir=$(mktemp -p /tmp -d dir-XXXXXX) || exit 1
     fifo=$dir/fifo
     mkfifo "$fifo" || { rmdir "$dir"; exit 1; }
-    (cat; tac $history 2> /dev/null; cat $fifo) | awk '!written[$0] { written[$0] = 1; print $0; fflush() }'\
-    | (sinmenu -i -e "$code" -l 10 -b -p "uri [dgtwuy*]:" "$@") \
+    (cat; tac $history 2> /dev/null; awk '/^$/ { exit } { print; fflush() }' $fifo) \
+        | awk '!written[$0] { written[$0] = 1; print $0; fflush() }' \
+        | (sinmenu -i -e "$code" -l 10 -b -p "uri [dgtwuy*]:" "$@"; echo > $fifo) \
         | while read line; do
         echo "$line" 1>&3
         case "$line" in
@@ -52,8 +53,7 @@ EOF
             *) (googlesuggest "${line#g }" | sed 's/^/g /' | unurl) > $fifo 3<&- &
         esac
     done 3>&1 1>$fifo | tail -n 1 | sed '/^$/d'
-    rm $fifo
-    rmdir $dir
+    rm -r $dir
 }
 sel=$(gui "$@")
 
