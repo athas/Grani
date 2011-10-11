@@ -27,14 +27,14 @@ def suggest(term):
     text = urllib.urlopen(URI + urllib.quote(term)).read() \
            .replace("window.google.ac.h","")
     for res in ([x for x in eval(text)[1]]):
-        print res[0].decode('latin-1').encode('utf-8')
+        print res[0].decode('latin-1').encode('utf-8').replace('\/','/')
 
 suggest(string.join(sys.argv[1:], ' '))
 EOF
 }
 
 unurl() {
-    awk '/^g [a-z]+\.[a-z]+$/{print substr($0,3); next}{print}'
+    awk '/^g [^ ]+\.[^ ]+$/{print substr($0,3); next}{print}'
 }
 
 dupefilter() {
