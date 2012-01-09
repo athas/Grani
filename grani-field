@@ -19,15 +19,15 @@ googlesuggest() {
 import sys, string
 import urllib
 
-URI = "http://ddgg.nfriedly.com/complete/search?q="
+URI = "http://clients1.google.dk/complete/search?client=firefox&hl=en-US&q="
+#URI = "http://ddgg.nfriedly.com/complete/search?q="
 
 def suggest(term):
     # Pull the results as Javascript, then munge them a bit and
     # evaluate them as Python, yielding a dictionary.
-    text = urllib.urlopen(URI + urllib.quote(term)).read() \
-           .replace("window.google.ac.h","")
+    text = urllib.urlopen(URI + urllib.quote(term)).read()
     for res in ([x for x in eval(text)[1]]):
-        print res[0].decode('latin-1').encode('utf-8').replace('\/','/')
+        print res.decode('latin-1').encode('utf-8').replace('\/','/')
 
 suggest(string.join(sys.argv[1:], ' '))
 EOF
@@ -52,7 +52,7 @@ EOF
     mkfifo "$fifo" || { rmdir "$dir"; exit 1; }
     (cat; tac $history 2> /dev/null; awk '/^$/ { exit } { print; fflush() }' $fifo) \
         | dupefilter \
-        | (sinmenu -i -e "$code" -l 10 -b -p "uri [dgtwuy*]:" "$@"; echo > $fifo) \
+        | (sinmenu -e "$code" -l 10 -b -p "uri [dgtwuy*]:" "$@"; echo > $fifo) \
         | while read line; do
         echo "$line" 1>&3
         case "$line" in
