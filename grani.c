@@ -397,7 +397,7 @@ loadstatuschange(WebKitWebView *view, GParamSpec *pspec, Client *c) {
         c->prevuri = g_strdup(uri);
         break;
     case WEBKIT_LOAD_FINISHED:
-        c->progress = 0;
+        c->progress = 100;
         update(c);
         sessionupd("add", uri, c->title);
         break;
